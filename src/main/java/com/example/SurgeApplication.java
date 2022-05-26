@@ -1,4 +1,4 @@
-package com.lingjin.surge;
+package com.example;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,5 +9,4 @@ public class SurgeApplication {
     public static void main(String[] args) {
         SpringApplication.run(SurgeApplication.class, args);
     }
-
 }
