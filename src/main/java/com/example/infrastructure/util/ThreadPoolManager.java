@@ -17,6 +17,8 @@ public class ThreadPoolManager {
     private static final int QUEUE_CAPACITY = 10;
     private static final int KEEP_ALIVE_TIME = 30;
 
+    private ThreadPoolManager(){}
+
     static {
         THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(CORE_POOL_SIZE
                 , MAX_POOL_SIZE

@@ -1,41 +1,34 @@
-package com.example.service.impl;
+package com.example.service;
 
+import com.alibaba.fastjson.JSON;
 import com.example.dataobject.bo.ZhiHuUserBean;
-import com.example.infrastructure.common.R;
+import com.example.infrastructure.util.BloomFilter;
 import com.example.infrastructure.util.JsoupUtils;
-import com.example.infrastructure.util.SpiderUrlQueue;
-import com.example.service.ZhiHuSpiderService;
-import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.junit.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 /**
  * @author leonard
- * @date 2022/5/26
+ * @date 2022/5/27
  * @Description TODO
  */
-@Slf4j
-@Service
-public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
+@SpringBootTest
+public class ZhiHuSpiderServiceTest {
 
-    @Override
-    public R spiderUserMessage(List<String> urls) {
-        R result = new R();
-        int i = 0;
-        for (; i < urls.size(); i++) {
-            try {
-                SpiderUrlQueue.get().put(urls.get(i));
-            } catch (InterruptedException e) {
-                log.info("SpiderUrlQueue is full.");
-            }
-        }
-        result.setMessage("已导入：" + i);
-        return result;
+    //使用BloomFilter算法来去重
+    private static BloomFilter filter = new BloomFilter();
+
+    @Test
+    void test(){
+        String eurl = "https://www.zhihu.com/people/zhang-jia-wei";
+        ZhiHuUserBean zhiHuUserBean = spiderZhiHuBean(eurl);
+        System.out.println(JSON.toJSONString(zhiHuUserBean));
     }
 
-    public ZhiHuUserBean spiderZhiHuBean(String url) {
+    private ZhiHuUserBean spiderZhiHuBean(String url) {
         ZhiHuUserBean zhiHuUserBean = new ZhiHuUserBean();
         Document userUrlContent = JsoupUtils.getDocument(url);
         //String userContent = userUrlContent.text();
@@ -101,4 +94,31 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
     }
 
 
+    //传入用户url，获取他所关注人的url
+    public static void addUserFollowingUrl(String userUrl) {
+        int i = 1;
+        while (true) {
+            String userFollowingUrl = "";
+            //知乎接口只能查到前三个关注人
+            userFollowingUrl = userUrl + "/following?page=" + i;
+            i++;
+            Document userFollowingContent = JsoupUtils.getDocument(userFollowingUrl);
+            Elements followingElements = userFollowingContent.select(".List-item");
+            //判断当前页关注人数是否为0，是的话就跳出循环
+            if (followingElements.size() != 0) {
+                for (Element e : followingElements) {
+                    String newUserUrl = e.select("a[href]").get(0).attr("href");
+                    if (!filter.contains(newUserUrl)) {
+                        //把获取到的地址加入阻塞队列
+                        System.out.println("https:" + newUserUrl);
+                        filter.add(newUserUrl);
+                        addUserFollowingUrl("https:" + newUserUrl);
+                    }
+                }
+            }
+            if (followingElements.size() == 0) {
+                break;
+            }
+        }
+    }
 }

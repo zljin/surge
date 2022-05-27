@@ -1,0 +1,21 @@
+CREATE TABLE `zhihu_user` (
+  `id` bigint(20) NOT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `gender` tinyint(255) DEFAULT NULL,
+  `business` varchar(255) DEFAULT NULL,
+  `company` varchar(255) DEFAULT NULL,
+  `position` varchar(255) DEFAULT NULL,
+  `education` varchar(255) DEFAULT NULL,
+  `major` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `answerCount` varchar(255) DEFAULT NULL,
+  `articlesCount` varchar(255) DEFAULT NULL,
+  `voteupCount` varchar(255) DEFAULT NULL,
+  `thankedCount` varchar(255) DEFAULT NULL,
+  `followingNum` varchar(255) DEFAULT NULL,
+  `followerCount` varchar(255) DEFAULT NULL,
+  `createTime` datetime DEFAULT NULL,
+  `ext` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
