@@ -2,18 +2,23 @@ package com.example.infrastructure.schedule;
 
 import cn.hutool.core.util.StrUtil;
 import com.example.dataobject.bo.ZhiHuUserBean;
+import com.example.dataobject.po.ZhihuUserEntity;
 import com.example.infrastructure.util.BloomFilter;
+import com.example.infrastructure.util.SnowFlakeUtil;
 import com.example.infrastructure.util.SpiderUrlQueue;
 import com.example.infrastructure.util.ThreadPoolManager;
 import com.example.service.ZhiHuSpiderService;
+import com.example.service.ZhihuUserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -28,43 +33,51 @@ public class ZhiHuSpiderUserJob {
     @Autowired
     ZhiHuSpiderService zhiHuSpiderService;
 
-    private BlockingQueue<String> blockingQueue = SpiderUrlQueue.get();
+    @Resource
+    private ZhihuUserService zhihuUserService;
 
     //使用BloomFilter算法来去重
     private BloomFilter filter = new BloomFilter();
 
     private static CountDownLatch countDownLatch = new CountDownLatch(3);
 
-
+    @Value("${zhihu.spiderjob.enabled:false}")
+    private boolean enabled;
 
     //5分钟执行一次
     @Scheduled(cron = "0 0/5 * * * *")
     public void cron2Db() throws InterruptedException {
 
-        if (blockingQueue.isEmpty()) {
+        if(!enabled){
+            return;
+        }
+
+        if (SpiderUrlQueue.get().isEmpty()) {
             log.info("无待爬url");
             return;
         }
-        List<ZhiHuUserBean> zhiHuUserBeans = new ArrayList<>();
+        List<ZhihuUserEntity> zhihuUserEntities = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             Runnable command = new Runnable() {
                 @Override
                 public void run() {
                     while (true) {
-                        if (blockingQueue.isEmpty()) {
+                        if (SpiderUrlQueue.get().isEmpty()) {
                             countDownLatch.countDown();
                             break;
                         }
                         String url = null;
                         try {
-                            url = blockingQueue.take();
+                            url = SpiderUrlQueue.get().take();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         if (!filter.contains(url) && StrUtil.isNotEmpty(url)) {
                             filter.add(url);
                             ZhiHuUserBean zhiHuUserBean = zhiHuSpiderService.spiderZhiHuBean(url);
-                            zhiHuUserBeans.add(zhiHuUserBean);
+                            ZhihuUserEntity zhihuUserEntity = new ZhihuUserEntity();
+                            BeanUtils.copyProperties(zhiHuUserBean,zhihuUserEntity);
+                            zhihuUserEntity.setId(SnowFlakeUtil.getInstance().nextId());
                         }
 
                     }
@@ -74,8 +87,7 @@ public class ZhiHuSpiderUserJob {
         }
 
         countDownLatch.await();
-        //todo TODB
-
+        zhihuUserService.saveBatch(zhihuUserEntities);
     }
 
 }

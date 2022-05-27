@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mapper.ZhihuUserDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.example.dataobject.po.ZhihuUserEntity" id="zhihuUserMap">
+        <result property="id" column="id"/>
+        <result property="url" column="url"/>
+        <result property="name" column="name"/>
+        <result property="gender" column="gender"/>
+        <result property="business" column="business"/>
+        <result property="company" column="company"/>
+        <result property="position" column="position"/>
+        <result property="education" column="education"/>
+        <result property="major" column="major"/>
+        <result property="image" column="image"/>
+        <result property="answercount" column="answerCount"/>
+        <result property="articlescount" column="articlesCount"/>
+        <result property="voteupcount" column="voteupCount"/>
+        <result property="thankedcount" column="thankedCount"/>
+        <result property="followingnum" column="followingNum"/>
+        <result property="followercount" column="followerCount"/>
+        <result property="createtime" column="createTime"/>
+        <result property="ext" column="ext"/>
+    </resultMap>
+
+</mapper>
