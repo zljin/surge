@@ -12,10 +12,6 @@ import lombok.Data;
 public class ZhihuUserEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * 
-	 */
-	@TableId
 	private Long id;
 	/**
 	 * 
@@ -28,7 +24,7 @@ public class ZhihuUserEntity implements Serializable {
 	/**
 	 * 
 	 */
-	private Integer gender;
+	private String gender;
 	/**
 	 * 
 	 */
@@ -56,31 +52,31 @@ public class ZhihuUserEntity implements Serializable {
 	/**
 	 * 
 	 */
-	private String answercount;
+	private String answerCount;
 	/**
 	 * 
 	 */
-	private String articlescount;
+	private String articlesCount;
 	/**
 	 * 
 	 */
-	private String voteupcount;
+	private String voteupCount;
 	/**
 	 * 
 	 */
-	private String thankedcount;
+	private String thankedCount;
 	/**
 	 * 
 	 */
-	private String followingnum;
+	private String followingNum;
 	/**
 	 * 
 	 */
-	private String followercount;
+	private String followerCount;
 	/**
 	 * 
 	 */
-	private Date createtime;
+	private Date createTime;
 	/**
 	 * 
 	 */

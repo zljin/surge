@@ -1,6 +1,5 @@
 package com.example.service;
 
-import com.example.dataobject.bo.ZhiHuUserBean;
 import com.example.infrastructure.common.R;
 
 import java.util.List;
@@ -8,10 +7,9 @@ import java.util.List;
 public interface ZhiHuSpiderService {
 
 
-    R spiderUserMessage(List<String> urls) throws InterruptedException;
+    R receiveUserUrl(List<String> urls);
 
-    ZhiHuUserBean spiderZhiHuBean(String url);
-
+    void consumerUserUrl() throws InterruptedException;
 
 
 

@@ -1,15 +1,31 @@
 package com.example.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.example.dataobject.bo.ZhiHuUserBean;
+import com.example.dataobject.po.ZhihuUserEntity;
 import com.example.infrastructure.common.R;
+import com.example.infrastructure.constant.CommonConstant;
+import com.example.infrastructure.util.BloomFilter;
+import com.example.infrastructure.util.CountUtil;
 import com.example.infrastructure.util.JsoupUtils;
-import com.example.infrastructure.util.SpiderUrlQueue;
+import com.example.infrastructure.util.ThreadPoolManager;
 import com.example.service.ZhiHuSpiderService;
+import com.example.service.ZhihuUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author leonard
@@ -20,30 +36,125 @@ import java.util.List;
 @Service
 public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
 
+    @Resource(name = "redisCommonTemplate")
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Resource
+    private ZhihuUserService zhihuUserService;
+
+    @Autowired
+    CountUtil countUtil;
+
+    //使用BloomFilter算法来去重
+    private BloomFilter filter = new BloomFilter();
+
+    private static CountDownLatch countDownLatch = new CountDownLatch(3);
+
     @Override
-    public R spiderUserMessage(List<String> urls) {
+    public R receiveUserUrl(List<String> urls) {
         R result = new R();
         int i = 0;
         for (; i < urls.size(); i++) {
-            try {
-                SpiderUrlQueue.get().put(urls.get(i));
-            } catch (InterruptedException e) {
-                log.info("SpiderUrlQueue is full.");
-            }
+            redisTemplate.opsForList()
+                    .leftPush(CommonConstant.SPIDER_URL_QUEUE, urls.get(i));
+            countUtil.cal();
         }
         result.setMessage("已导入：" + i);
         return result;
     }
 
-    public ZhiHuUserBean spiderZhiHuBean(String url) {
+    @Override
+    public void consumerUserUrl() throws InterruptedException {
+        ListOperations<String, Object> ops = redisTemplate.opsForList();
+        Long size = ops.size(CommonConstant.SPIDER_URL_QUEUE);
+        if (size == null || size == 0) {
+            return;
+        }
+        List<ZhihuUserEntity> zhihuUserEntities = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            Runnable command = new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        Long size = ops.size(CommonConstant.SPIDER_URL_QUEUE);
+                        if (size == null || size == 0) {
+                            countDownLatch.countDown();
+                            break;
+                        }
+                        String url = (String) ops.rightPop(CommonConstant.SPIDER_URL_QUEUE);
+                        if (!filter.contains(url) && StrUtil.isNotEmpty(url)) {
+                            filter.add(url);
+                            ZhiHuUserBean zhiHuUserBean = spiderZhiHuBean(url);
+                            ZhihuUserEntity zhihuUserEntity = new ZhihuUserEntity();
+                            BeanUtil.copyProperties(zhiHuUserBean, zhihuUserEntity);
+                            zhihuUserEntity.setUrl(url);
+                            zhihuUserEntity.setCreateTime(new Date());
+                            zhihuUserEntities.add(zhihuUserEntity);
+                            addUserFollowingUrl(url);
+                        }
+                    }
+                }
+            };
+            ThreadPoolManager.THREAD_POOL_EXECUTOR.execute(command);
+        }
+
+        countDownLatch.await();
+        try {
+            boolean b = zhihuUserService.saveBatch(zhihuUserEntities);
+            log.info("the result is :{}", b);
+        } catch (Exception e) {
+            log.info("the err is :{}", e.toString());
+        }finally {
+            log.info("countUtil.get:{}",countUtil.get());
+            //0-1000内清空，重新递归
+            countUtil.clearZero();
+        }
+    }
+
+    private void addUserFollowingUrl(String userUrl) {
+        if(countUtil.get()>1000){
+            return;
+        }
+        int i = 1;
+        String userFollowingUrl = "";
+        //知乎接口只能查到前三个关注人
+        userFollowingUrl = userUrl + "/following?page=" + i;
+        Document userFollowingContent = JsoupUtils.getDocument(userFollowingUrl);
+        Elements followingElements = userFollowingContent.select(".List-item");
+        //判断当前页关注人数是否为0，是的话就跳出循环
+        if (followingElements.size() != 0) {
+            for (Element e : followingElements) {
+                String newUserUrl = e.select("a[href]").get(0).attr("href");
+                if (!filter.contains(newUserUrl)) {
+                    //把获取到的地址加入阻塞队列
+                    filter.add(newUserUrl);
+                    log.info("https:" + newUserUrl);
+                    redisTemplate.opsForList().leftPush(CommonConstant.SPIDER_URL_QUEUE, "https:" + newUserUrl);
+                    countUtil.cal();
+                    addUserFollowingUrl("https:" + newUserUrl);
+                }
+            }
+        }
+    }
+
+
+    private ZhiHuUserBean spiderZhiHuBean(String url) {
         ZhiHuUserBean zhiHuUserBean = new ZhiHuUserBean();
         Document userUrlContent = JsoupUtils.getDocument(url);
-        //String userContent = userUrlContent.text();
+        String userContent = userUrlContent.text();
 
+        zhiHuUserBean.setName("");
+        zhiHuUserBean.setFollowingNum("");
         //名称
-        String name = userUrlContent.select(".ProfileHeader-name").first().text();
+        if (userContent.contains(".ProfileHeader-name")) {
+            String name = userUrlContent.select(".ProfileHeader-name").first().text();
+            zhiHuUserBean.setName(name);
+        }
         //关注的人
-        String followingNum = userUrlContent.select(".NumberBoard-itemValue").first().text();
+        if (userContent.contains(".NumberBoard-itemValue")) {
+            String followingNum = userUrlContent.select(".NumberBoard-itemValue").first().text();
+            zhiHuUserBean.setFollowingNum(followingNum);
+        }
         String gender = userUrlContent.select("meta[itemprop=gender]").first().attr("content");
         String image = userUrlContent.select("meta[itemprop=image]").first().attr("content");
         String voteupCount = userUrlContent.select("meta[itemprop=zhihu:voteupCount]").first().attr("content");
@@ -53,8 +164,6 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
         String answerCount = userUrlContent.select("meta[itemprop=zhihu:answerCount]").first().attr("content");
         String articlesCount = userUrlContent.select("meta[itemprop=zhihu:articlesCount]").first().attr("content");
 
-        zhiHuUserBean.setName(name);
-        zhiHuUserBean.setFollowingNum(followingNum);
         zhiHuUserBean.setGender(gender);
         zhiHuUserBean.setImage(image);
         zhiHuUserBean.setVoteupCount(voteupCount);
