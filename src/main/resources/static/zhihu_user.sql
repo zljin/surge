@@ -1,21 +1,22 @@
 CREATE TABLE `zhihu_user` (
-  `id` bigint(20) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `url` varchar(255) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
-  `gender` tinyint(255) DEFAULT NULL,
+  `gender` varchar(10) DEFAULT NULL,
   `business` varchar(255) DEFAULT NULL,
   `company` varchar(255) DEFAULT NULL,
   `position` varchar(255) DEFAULT NULL,
   `education` varchar(255) DEFAULT NULL,
   `major` varchar(255) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
-  `answerCount` varchar(255) DEFAULT NULL,
-  `articlesCount` varchar(255) DEFAULT NULL,
-  `voteupCount` varchar(255) DEFAULT NULL,
-  `thankedCount` varchar(255) DEFAULT NULL,
-  `followingNum` varchar(255) DEFAULT NULL,
-  `followerCount` varchar(255) DEFAULT NULL,
-  `createTime` datetime DEFAULT NULL,
+  `answer_count` varchar(255) DEFAULT NULL,
+  `articles_count` varchar(255) DEFAULT NULL,
+  `voteup_count` varchar(255) DEFAULT NULL,
+  `thanked_count` varchar(255) DEFAULT NULL,
+  `following_num` varchar(255) DEFAULT NULL,
+  `follower_count` varchar(255) DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
   `ext` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_url` (`url`) USING BTREE COMMENT 'unique url'
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;

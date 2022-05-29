@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author leonard
  * @date 2022/5/26
- * @Description TODO
+ * @Description https://zhuanlan.zhihu.com/p/24973518
  */
 @Slf4j
 @Service
@@ -42,13 +41,11 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
     @Resource
     private ZhihuUserService zhihuUserService;
 
-    @Autowired
-    CountUtil countUtil;
-
     //使用BloomFilter算法来去重
     private BloomFilter filter = new BloomFilter();
 
     private static CountDownLatch countDownLatch = new CountDownLatch(3);
+
 
     @Override
     public R receiveUserUrl(List<String> urls) {
@@ -57,7 +54,7 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
         for (; i < urls.size(); i++) {
             redisTemplate.opsForList()
                     .leftPush(CommonConstant.SPIDER_URL_QUEUE, urls.get(i));
-            countUtil.cal();
+            CountUtil.cal();
         }
         result.setMessage("已导入：" + i);
         return result;
@@ -105,14 +102,14 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
         } catch (Exception e) {
             log.info("the err is :{}", e.toString());
         }finally {
-            log.info("countUtil.get:{}",countUtil.get());
+            log.info("countUtil.get:{}",CountUtil.get());
             //0-1000内清空，重新递归
-            countUtil.clearZero();
+            CountUtil.clearZero();
         }
     }
 
     private void addUserFollowingUrl(String userUrl) {
-        if(countUtil.get()>1000){
+        if(CountUtil.get()>1000){
             return;
         }
         int i = 1;
@@ -130,7 +127,7 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
                     filter.add(newUserUrl);
                     log.info("https:" + newUserUrl);
                     redisTemplate.opsForList().leftPush(CommonConstant.SPIDER_URL_QUEUE, "https:" + newUserUrl);
-                    countUtil.cal();
+                    CountUtil.cal();
                     addUserFollowingUrl("https:" + newUserUrl);
                 }
             }
@@ -145,6 +142,7 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
 
         zhiHuUserBean.setName("");
         zhiHuUserBean.setFollowingNum("");
+        zhiHuUserBean.setUrl(url);
         //名称
         if (userContent.contains(".ProfileHeader-name")) {
             String name = userUrlContent.select(".ProfileHeader-name").first().text();
@@ -155,23 +153,35 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
             String followingNum = userUrlContent.select(".NumberBoard-itemValue").first().text();
             zhiHuUserBean.setFollowingNum(followingNum);
         }
-        String gender = userUrlContent.select("meta[itemprop=gender]").first().attr("content");
-        String image = userUrlContent.select("meta[itemprop=image]").first().attr("content");
-        String voteupCount = userUrlContent.select("meta[itemprop=zhihu:voteupCount]").first().attr("content");
-        String thankedCount = userUrlContent.select("meta[itemprop=zhihu:thankedCount]").first().attr("content");
-        String followerCount = userUrlContent.select("meta[itemprop=zhihu:followerCount]").first().attr("content");
-        //<meta itemprop="zhihu:answerCount" content="4142">
-        String answerCount = userUrlContent.select("meta[itemprop=zhihu:answerCount]").first().attr("content");
-        String articlesCount = userUrlContent.select("meta[itemprop=zhihu:articlesCount]").first().attr("content");
-
-        zhiHuUserBean.setGender(gender);
-        zhiHuUserBean.setImage(image);
-        zhiHuUserBean.setVoteupCount(voteupCount);
-        zhiHuUserBean.setThankedCount(thankedCount);
-        zhiHuUserBean.setFollowerCount(followerCount);
-        zhiHuUserBean.setAnswerCount(answerCount);
-        zhiHuUserBean.setArticlesCount(articlesCount);
-
+        if(userContent.contains("meta[itemprop=gender]")){
+            String gender = userUrlContent.select("meta[itemprop=gender]").first().attr("content");
+            zhiHuUserBean.setGender(gender);
+        }
+        if(userContent.contains("meta[itemprop=image]")){
+            String image = userUrlContent.select("meta[itemprop=image]").first().attr("content");
+            zhiHuUserBean.setImage(image);
+        }
+        if(userContent.contains("meta[itemprop=zhihu:voteupCount]")){
+            String voteupCount = userUrlContent.select("meta[itemprop=zhihu:voteupCount]").first().attr("content");
+            zhiHuUserBean.setVoteupCount(voteupCount);
+        }
+        if(userContent.contains("meta[itemprop=zhihu:thankedCount]")){
+            String thankedCount = userUrlContent.select("meta[itemprop=zhihu:thankedCount]").first().attr("content");
+            zhiHuUserBean.setThankedCount(thankedCount);
+        }
+        if(userContent.contains("meta[itemprop=zhihu:followerCount]")){
+            String followerCount = userUrlContent.select("meta[itemprop=zhihu:followerCount]").first().attr("content");
+            zhiHuUserBean.setFollowerCount(followerCount);
+        }
+        if(userContent.contains("zhihu:answerCount")){
+            //<meta itemprop="zhihu:answerCount" content="4142">
+            String answerCount = userUrlContent.select("meta[itemprop=zhihu:answerCount]").first().attr("content");
+            zhiHuUserBean.setAnswerCount(answerCount);
+        }
+        if(userContent.contains("meta[itemprop=zhihu:articlesCount]")){
+            String articlesCount = userUrlContent.select("meta[itemprop=zhihu:articlesCount]").first().attr("content");
+            zhiHuUserBean.setArticlesCount(articlesCount);
+        }
         //行业 公司 职位
         int size = userUrlContent.select(".ProfileHeader-infoItem").size();
         if (size == 2) {

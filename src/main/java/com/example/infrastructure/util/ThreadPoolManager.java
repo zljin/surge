@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author leonard
- * @Description 线程池用法
+ * @Description surge线程池
  * @date 2021-07-29 17:02
  */
 public class ThreadPoolManager {

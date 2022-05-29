@@ -1,6 +1,8 @@
 package com.example.infrastructure.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 import org.springframework.stereotype.Component;
@@ -14,23 +16,26 @@ import javax.annotation.Resource;
 @Component
 public class CountUtil {
 
-    @Resource(name = "redisCommonTemplate")
-    private RedisTemplate<String, Object> redisTemplate;
-
-    private static final String PREFIX="spider:url:count";
-
-    private RedisAtomicLong entityIdCounter = new RedisAtomicLong(PREFIX, redisTemplate.getConnectionFactory());
+    private static final String PREFIX = "spider:url:count";
+    private static RedisTemplate<String, Object> redisTemplate;
+    private static RedisAtomicLong entityIdCounter;
 
 
-    public long get(){
+    @Autowired
+    public CountUtil(@Qualifier("redisCommonTemplate") RedisTemplate<String, Object> redisTemplate) {
+        CountUtil.redisTemplate = redisTemplate;
+        entityIdCounter = new RedisAtomicLong(PREFIX,redisTemplate.getConnectionFactory());
+    }
+
+    public static long get() {
         return entityIdCounter.get();
     }
 
-    public long cal(){
+    public static long cal() {
         return entityIdCounter.incrementAndGet();
     }
 
-    public long clearZero(){
+    public static long clearZero() {
         entityIdCounter.set(0);
         return entityIdCounter.get();
     }
