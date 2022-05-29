@@ -46,4 +46,4 @@ mybatis-plus:
 
 zhihu:
   spiderjob:
-    enabled: true
+    enabled: false

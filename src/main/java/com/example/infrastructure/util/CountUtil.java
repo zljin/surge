@@ -7,8 +7,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-
 /**
  * Redis计数器
  */
