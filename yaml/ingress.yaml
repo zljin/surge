@@ -13,3 +13,4 @@ spec:
             backend:
               serviceName: surge
               servicePort: 9999
+# 先下载ingress controller才能生效
