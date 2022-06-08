@@ -7,7 +7,7 @@ import com.example.dataobject.po.ZhihuUserEntity;
 import com.example.infrastructure.common.R;
 import com.example.infrastructure.constant.CommonConstant;
 import com.example.infrastructure.util.BloomFilter;
-import com.example.infrastructure.util.CountUtil;
+import com.example.infrastructure.util.AtomicCountUtil;
 import com.example.infrastructure.util.JsoupUtils;
 import com.example.infrastructure.util.ThreadPoolManager;
 import com.example.service.ZhiHuSpiderService;
@@ -54,7 +54,7 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
         for (; i < urls.size(); i++) {
             redisTemplate.opsForList()
                     .leftPush(CommonConstant.SPIDER_URL_QUEUE, urls.get(i));
-            CountUtil.cal();
+            AtomicCountUtil.cal();
         }
         result.setMessage("已导入：" + i);
         return result;
@@ -102,14 +102,14 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
         } catch (Exception e) {
             log.info("the err is :{}", e.toString());
         }finally {
-            log.info("countUtil.get:{}",CountUtil.get());
+            log.info("AtomicCountUtil.get:{}",AtomicCountUtil.get());
             //0-1000内清空，重新递归
-            CountUtil.clearZero();
+            AtomicCountUtil.clearZero();
         }
     }
 
     private void addUserFollowingUrl(String userUrl) {
-        if(CountUtil.get()>1000){
+        if(AtomicCountUtil.get()>1000){
             return;
         }
         int i = 1;
@@ -127,7 +127,7 @@ public class ZhiHuSpiderServiceImpl implements ZhiHuSpiderService {
                     filter.add(newUserUrl);
                     log.info("https:" + newUserUrl);
                     redisTemplate.opsForList().leftPush(CommonConstant.SPIDER_URL_QUEUE, "https:" + newUserUrl);
-                    CountUtil.cal();
+                    AtomicCountUtil.cal();
                     addUserFollowingUrl("https:" + newUserUrl);
                 }
             }
