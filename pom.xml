@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.2.RELEASE</version>
+        <version>2.2.2.RELEASE</version> <!--release稳定版 snap迭代版-->
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.lingjin</groupId>
+    <groupId>com.example</groupId>
     <artifactId>surge</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1-RELEASE</version>
     <name>surge</name>
     <description>Demo project for Spring Boot</description>
     <properties>
@@ -116,16 +116,44 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!--mvn clean package docker:build -DpushImage-->
+            <!--可代替dockerFile-->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.4.13</version>
                 <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
+                    <serverId>docker-repo</serverId>
+                    <registryUrl>192.168.56.1:8082</registryUrl>
+                    <dockerHost>http://192.168.56.102:2375</dockerHost>
+                    <imageName>192.168.56.1:8082/${project.artifactId}:${project.version}</imageName>
+                    <baseImage>java</baseImage>
+                    <entryPoint>["java", "-jar","/${project.build.finalName}.jar"]</entryPoint>
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.build.finalName}.jar</include>
+                        </resource>
+                    </resources>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <!--mvn deploy上传到本地repo和远程私服nexus repo-->
+    <distributionManagement>
+        <repository>
+            <id>upload</id>
+            <name>release</name>
+            <url>http://127.0.0.1:8081/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>upload</id>
+            <name>snapshot</name>
+            <url>http://127.0.0.1:8081/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>
