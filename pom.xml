@@ -126,7 +126,7 @@
                 <configuration>
                     <serverId>docker-repo</serverId>
                     <registryUrl>192.168.56.1:8082</registryUrl>
-                    <dockerHost>http://192.168.56.102:2375</dockerHost>
+                    <dockerHost>http://192.168.56.101:2375</dockerHost>
                     <imageName>192.168.56.1:8082/${project.artifactId}:${project.version}</imageName>
                     <baseImage>java</baseImage>
                     <entryPoint>["java", "-jar","/${project.build.finalName}.jar"]</entryPoint>
