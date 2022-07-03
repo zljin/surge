@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>surge</artifactId>
-    <version>0.0.1-RELEASE</version>
+    <version>0.0.2-RELEASE</version>
     <name>surge</name>
     <description>Demo project for Spring Boot</description>
     <properties>
@@ -111,7 +111,7 @@
     </dependencies>
 
     <build>
-        <finalName>surge</finalName>
+        <finalName>${project.build.finalName}.jar</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
