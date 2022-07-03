@@ -4,6 +4,7 @@ import com.example.infrastructure.common.R;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +23,9 @@ import java.net.UnknownHostException;
 @RestController
 public class HealthController {
 
+    @Value("${msg:unavailable}")
+    private String status;
+
     @GetMapping(value = "/health")
     @ApiOperation(value = "探针")
     @ResponseBody
@@ -29,7 +33,7 @@ public class HealthController {
         String tip = "surge is health. ";
         try {
             String hostAddress = InetAddress.getLocalHost().getHostAddress();
-            tip = tip+" IP: "+hostAddress;
+            tip = tip+" IP: "+hostAddress +" Status: "+ status;
         } catch (UnknownHostException e) {
             log.info("error:" + e);
         }

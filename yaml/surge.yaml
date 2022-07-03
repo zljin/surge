@@ -19,6 +19,11 @@ spec:
       containers:
         - name: surge  # 容器名字
           image: 192.168.56.1:8082/surge:0.0.1-RELEASE # 镜像
+          imagePullPolicy: IfNotPresent
+          # 环境变量,可替代掉application.yml的配置
+          env:
+            - name: "--status"
+              value: "available"
 ---
 apiVersion: v1
 kind: Service
@@ -28,11 +33,13 @@ spec:
   selector:
     # 通过label surge 对应 pod的label
     app: surge
-  type: NodePort
+  # https://blog.csdn.net/weixin_44267608/article/details/102728050
+  # NodePort | Ingress | LoadBalancer
+  type: NodePort  # 用k8s集群任意node的nodePort端口访问到这个服务
   ports:
     - port: 9999 # service端口
-      targetPort: 9884 # 容器端口
-      nodePort: 31000  # 节点端口，范围固定 30000 ~ 32767
+      targetPort: 9884 # 容器端口: 访问service的端口,转发到pod的哪个端口上
+      nodePort: 31000  # 节点端口，范围固定 30000 ~ 32767 ,不设置会自动分配一个port
 ---
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
