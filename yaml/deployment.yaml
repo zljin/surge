@@ -17,4 +17,4 @@ spec:
       # 定义容器，可以多个
       containers:
         - name: surge  # 容器名字
-          image: 192.168.56.1:8082/surge:0.0.1-RELEASE # 镜像
+          image: 192.168.56.1:8082/surge:0.0.3-RELEASE # 镜像

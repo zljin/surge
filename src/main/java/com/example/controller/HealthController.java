@@ -23,7 +23,7 @@ import java.net.UnknownHostException;
 @RestController
 public class HealthController {
 
-    @Value("${msg:unavailable}")
+    @Value("${status:unavailable}")
     private String status;
 
     @GetMapping(value = "/health")

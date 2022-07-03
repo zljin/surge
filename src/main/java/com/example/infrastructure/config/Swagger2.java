@@ -39,8 +39,8 @@ public class Swagger2 {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("jinx平台接口api")        // 文档页标题
-                .contact(new Contact("alianlyy",
+                .title("leonard平台接口api")        // 文档页标题
+                .contact(new Contact("leonard",
                         "https://zljin.github.io/",
                         "leonard_zou@163.com"))        // 联系人信息
                 .description("专为lingjin提供的api文档")  // 详细信息
