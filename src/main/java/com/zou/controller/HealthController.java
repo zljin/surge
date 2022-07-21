@@ -1,5 +1,6 @@
-package com.example.controller;
+package com.zou.controller;
 
+import com.zou.dataobject.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
