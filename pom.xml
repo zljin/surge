@@ -8,7 +8,7 @@
         <version>2.2.2.RELEASE</version> <!--release稳定版 snap迭代版-->
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.example</groupId>
+    <groupId>com.zou</groupId>
     <artifactId>surge</artifactId>
     <version>0.0.0-RELEASE</version>
     <name>surge</name>

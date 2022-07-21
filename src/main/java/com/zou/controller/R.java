@@ -1,4 +1,4 @@
-package com.example.controller;
+package com.zou.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
