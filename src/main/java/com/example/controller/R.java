@@ -1,4 +1,4 @@
-package com.example.infrastructure.common;
+package com.example.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,3 +20,4 @@ public class R<E> {
         this(200, "ok", data);
     }
 }
+

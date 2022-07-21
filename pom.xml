@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>surge</artifactId>
-    <version>0.0.3-RELEASE</version>
+    <version>0.0.0-RELEASE</version>
     <name>surge</name>
     <description>Demo project for Spring Boot</description>
     <properties>
@@ -22,79 +22,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-
-        <!--导入mysql驱动-->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.17</version>
-        </dependency>
-
-        <!--mybatis-plus-->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.2.0</version>
-        </dependency>
-
-        <!-- 引入 redis 依赖 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-            <!--移除springboot2.0的默认redis客户端-->
-            <exclusions>
-                <exclusion>
-                    <artifactId>lettuce-core</artifactId>
-                    <groupId>io.lettuce</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-pool2</artifactId>
-            <version>2.9.0</version>
-        </dependency>
-
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-
-        <!-- swagger2 配置 -->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>swagger-bootstrap-ui</artifactId>
-            <version>1.6</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.7.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.24</version>
         </dependency>
 
         <dependency>
@@ -117,43 +48,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <!--mvn clean package docker:build -DpushImage-->
-            <!--可代替dockerFile-->
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>0.4.13</version>
-                <configuration>
-                    <serverId>docker-repo</serverId>
-                    <registryUrl>192.168.56.1:8082</registryUrl>
-                    <dockerHost>http://192.168.56.102:2375</dockerHost>
-                    <imageName>192.168.56.1:8082/${project.artifactId}:${project.version}</imageName>
-                    <baseImage>java</baseImage>
-                    <entryPoint>["java", "-jar","/${project.build.finalName}.jar"]</entryPoint>
-                    <resources>
-                        <resource>
-                            <targetPath>/</targetPath>
-                            <directory>${project.build.directory}</directory>
-                            <include>${project.build.finalName}.jar</include>
-                        </resource>
-                    </resources>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
-
-    <!--mvn deploy上传到本地repo和远程私服nexus repo-->
-    <distributionManagement>
-        <repository>
-            <id>upload</id>
-            <name>release</name>
-            <url>http://127.0.0.1:8081/repository/maven-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>upload</id>
-            <name>snapshot</name>
-            <url>http://127.0.0.1:8081/repository/maven-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
-
 </project>
