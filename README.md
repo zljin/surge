@@ -3,5 +3,4 @@
 |branch |content|
 |  ----  | ----  |
 |dailyCode|corejava and leetcode|
-|spider|爬虫代码|
-|devops|devops的sample项目|
+|spider|爬虫代码 和devops发布|
